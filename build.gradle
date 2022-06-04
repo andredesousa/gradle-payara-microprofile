@@ -1,0 +1,207 @@
+plugins {
+    id 'com.diffplug.spotless' version '6.2.2'
+    id 'com.github.ben-manes.versions' version '0.42.0'
+    id 'com.github.spotbugs' version '5.0.5'
+    id 'com.star-zero.gradle.githook' version '1.2.1'
+    id 'io.swagger.core.v3.swagger-gradle-plugin' version '2.2.0'
+    id 'pl.allegro.tech.build.axion-release' version '1.13.6'
+    id 'ru.netris.commitlint' version '1.4.1'
+    id 'se.bjurr.gitchangelog.git-changelog-gradle-plugin' version '1.71.8'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'java'
+    id 'pmd'
+    id 'war'
+}
+
+group = 'app'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+	mavenCentral()
+}
+
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output + project.configurations.testCompileClasspath
+        runtimeClasspath += sourceSets.main.output + project.configurations.testRuntimeClasspath
+    }
+}
+
+dependencies {
+    implementation 'org.eclipse.microprofile:microprofile:4.1'
+	implementation 'org.eclipse.microprofile.openapi:microprofile-openapi-api:3.0'
+	implementation 'org.microprofile-ext.openapi-ext:openapi-ui:1.1.5'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+	testImplementation 'org.mockito:mockito-junit-jupiter:4.6.1'
+	testImplementation 'org.mockito:mockito-core:4.6.1'
+	testImplementation 'org.mockito:mockito-inline:4.6.1'
+    testImplementation 'org.testcontainers:testcontainers:1.17.2'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.2'
+    testImplementation 'io.rest-assured:rest-assured:5.1.0'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+war {
+    archiveFileName = 'microprofile-api.war'
+}
+
+githook {
+    failOnMissingHooksDir = false
+    hooks {
+        'commit-msg' {
+            task = 'commitlint'
+        }
+    }
+}
+
+resolve {
+    outputFileName = 'openapi'
+    outputFormat = 'YAML'
+    prettyPrint = 'TRUE'
+    classpath = sourceSets.main.runtimeClasspath
+    resourcePackages = ['app']
+    outputDir = file('build')
+}
+
+checkstyle {
+    toolVersion = '9.0'
+    configFile = file('checkstyle.xml')
+}
+
+pmd {
+    toolVersion = '6.38.0'
+}
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        importOrder()
+        removeUnusedImports()
+        prettier([
+            'prettier': '2.5.1',
+            'prettier-plugin-java': '1.6.1'
+        ]).configFile('.prettierrc')
+    }
+}
+
+spotbugs {
+  toolVersion = '4.4.1'
+}
+
+jacoco {
+    toolVersion = '0.8.7'
+}
+
+jacocoTestReport {
+    dependsOn test
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+check {
+    dependsOn.clear()
+    dependsOn 'lint', 'test'
+}
+
+test {
+    finalizedBy jacocoTestReport
+	useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs the integration tests.'
+    group = 'Verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+task lint() {
+    dependsOn 'formatCheck', 'checkstyle', 'pmd', 'spotbugs'
+    description = 'Runs several static code analysis.'
+    group = 'Verification'
+}
+
+task checkstyle() {
+    dependsOn 'checkstyleIntegrationTest', 'checkstyleMain', 'checkstyleTest'
+    description = 'Runs Checkstyle analysis for the source folder.'
+    group = 'Verification'
+}
+
+task pmd() {
+    dependsOn 'pmdIntegrationTest', 'pmdMain', 'pmdTest'
+    description = 'Runs PMD analysis for the source folder.'
+    group = 'Verification'
+}
+
+task spotbugs() {
+    dependsOn 'spotbugsIntegrationTest', 'spotbugsMain', 'spotbugsTest'
+    description = 'Runs SpotBugs analysis for the source folder.'
+    group = 'Verification'
+
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+        reports {
+            html.enabled = true
+        }
+    }
+}
+
+task format() {
+    dependsOn 'spotlessApply'
+    description = 'Applies code formatting steps to source code in-place.'
+    group = 'Verification'
+}
+
+task formatCheck() {
+    dependsOn 'spotlessCheck'
+    description = 'Checks that source code satisfies formatting steps.'
+    group = 'Verification'
+}
+
+task generateChangelog(type: se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask) {
+    description = 'Generates a changelog from GIT repository.'
+    group = 'Release'
+    fromRepo = file('.')
+    file = file('CHANGELOG.md');
+    templateContent = file('changelog.mustache').getText('UTF-8');
+}
+
+task buildImage(type: Exec) {
+    commandLine 'docker', 'build', '-f', 'src/main/docker/Dockerfile', '-t', 'microprofile-api', '.'
+    description = 'Builds a Docker image of the application.'
+    group = 'Build'
+}
+
+task deploy(type: Exec) {
+    commandLine 'ansible-playbook', 'ci/deploy/deploy-to-swarm.yaml'
+    description = 'Deploys the application to Docker Swarm.'
+    group = 'Release'
+}

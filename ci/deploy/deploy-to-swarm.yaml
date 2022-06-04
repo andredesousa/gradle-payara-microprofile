@@ -1,0 +1,19 @@
+---
+- name: Deploy MicroProfile API
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Deploy to Docker Swarm
+      docker_stack:
+        name: "microprofile-api"
+        state: present
+        compose:
+          - version: "3.7"
+            services:
+              microprofile-api:
+                image: microprofile-api:latest
+                restart: always
+                ports:
+                  - "8080:8080"
+        resolve_image: always
