@@ -1,6 +1,6 @@
 # Essential MicroProfile Scaffold
 
-This project uses [MicroProfile](https://microprofile.io/), an open forum to optimize Enterprise Java for a microservices architecture.
+This project uses [MicroProfile](https://microprofile.io/), an open forum to optimize Enterprise Java for a microservices architecture, and [Payara Micro 5](https://www.payara.fish/).
 It was generated with [MicroProfile Starter](https://start.microprofile.io/).
 It provides a complete **RESTful API** configured, including build, test, and deploy scripts as examples.
 It is recommended to have, at least, **Java 11**, [Node.js](https://nodejs.org/en/), [Docker](https://www.docker.com/) and [Ansible](https://www.ansible.com/) installed.
