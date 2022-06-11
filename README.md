@@ -1,8 +1,9 @@
 # Essential MicroProfile Scaffold
 
 This project uses [MicroProfile](https://microprofile.io/), an open forum to optimize Enterprise Java for a microservices architecture.
+It was generated with [MicroProfile Starter](https://start.microprofile.io/).
 It provides a complete **RESTful API** configured, including build, test, and deploy scripts as examples.
-It is recommended to have, at least, **Java 11**, [Payara 5](https://www.payara.fish/), [Node.js](https://nodejs.org/en/), [Docker](https://www.docker.com/) and [Ansible](https://www.ansible.com/) installed.
+It is recommended to have, at least, **Java 11**, [Node.js](https://nodejs.org/en/), [Docker](https://www.docker.com/) and [Ansible](https://www.ansible.com/) installed.
 
 ## Table of Contents
 
@@ -40,6 +41,7 @@ Based on best practices from the community, other github projects and developer 
 |  |  |  └── microprofile-config.properties
 |  |  └── webapp
 |  └── test
+├── .dockerignore
 ├── .editorconfig
 ├── .gitignore
 ├── .prettierrc
@@ -65,7 +67,7 @@ The tasks in [build.gradle](build.gradle) file were built with simplicity in min
 The next tasks should be executed in a console inside the root directory:
 
 - `./gradlew tasks` - Displays the tasks runnable from root project 'app'.
-- `./gradlew war` - Generates a war archive with all the web-app.
+- `./gradlew microStart` - Starts Payara Micro with the specified configuration.
 - `./gradlew check` - Runs all checks.
 - `./gradlew test` - Runs the unit tests.
 - `./gradlew integrationTest` - Run the integration tests.
@@ -73,8 +75,10 @@ The next tasks should be executed in a console inside the root directory:
 - `./gradlew format` - Applies code formatting steps to source code in-place.
 - `./gradlew clean` - Deletes the build directory.
 - `./gradlew javadoc` - Generates Javadoc API documentation for the main source code.
+- `./gradlew generateOpenApi` - Generates the OpenAPI specification file.
 - `./gradlew generateChangelog` - Generates a changelog from GIT repository.
 - `./gradlew dependencyUpdates` - Displays the dependency updates for the project.
+- `./gradlew war` - Generates a war archive with all the web-app.
 - `./gradlew build` - Assembles and tests this project.
 - `./gradlew buildImage` - Builds a Docker image of the application.
 - `./gradlew release` - Performs release, creates tag and pushes it to remote.
@@ -85,17 +89,14 @@ For more details, read the [Command-Line Interface](https://docs.gradle.org/curr
 
 ## Running in development mode
 
-You can run the application on your local [Payara Server](https://www.payara.fish/) instance.
-First, you need to build the project. Use:
+You can run your application in dev mode that enables live coding using `./gradlew war microStart` command.
 
-```bash
-./gradlew clean war
-```
-
+Alternatively, you can run the application on your local [Payara Server](https://www.payara.fish/) instance.
+First, you need to build the project with `./gradlew clean war` command.
 After, you can deploy the [microprofile-api.war](build/libs/microprofile-api.war) on Payara Server.
 
-This app includes [Swagger](https://swagger.io/). It is available at <http://localhost:8080/microprofile-api/openapi-ui/>.
-The OpenAPI Specification is automatically generated. Use `./gradlew resolve` to generate the [openapi.yaml](build/openapi.yaml) file.
+This application includes [Swagger](https://swagger.io/). It is available at <http://localhost:8080/microprofile-api/openapi-ui/>.
+The OpenAPI Specification is automatically generated. Use `./gradlew generateOpenApi` to generate the [openapi.yaml](build/openapi.yaml) file.
 
 ## Linting and formatting code
 
@@ -137,9 +138,12 @@ You can see the HTML coverage report opening the [index.html](build/reports/jaco
 
 Integration tests determine if independently developed units of software work correctly when they are connected to each other.
 
-Use `./gradlew integrationTest` to execute the integration tests via [JUnit 5](https://junit.org/junit5/) and [REST Assured](https://rest-assured.io/).
+Use `./gradlew integrationTest` to execute the integration tests via [JUnit 5](https://junit.org/junit5/), [Testcontainers](https://www.testcontainers.org/) and [REST Assured](https://rest-assured.io/).
 Use `./gradlew integrationTest -t` to keep executing your tests while watching for file changes in the background.
 You can see the HTML report opening the [index.html](build/reports/tests/integrationTest/index.html) file in your web browser.
+
+The first time, you need to build the Docker image used in the integration tests.
+For more details, see [Building and deploying](#building-and-deploying) section.
 
 Like unit tests, you can also run subsets of a test suite.
 See the [Test filtering](https://docs.gradle.org/current/userguide/java_testing.html#test_filtering) section of the Gradle documentation
@@ -194,7 +198,7 @@ In `ci` folder you can find scripts for your [Jenkins](https://www.jenkins.io/) 
 This project follows [Semantic Versioning](https://semver.org/) and uses git tags to define the current version of the project.
 Use `./gradlew currentVersion` to print the current version extracted from SCM and `./gradlew release` to release the current version.
 
-This project contains a Dockerfile that you can use to build your Docker image. Use `./gradlew war buildImage`.
+This project contains a Dockerfile that you can use to build your Docker image. Use `./gradlew buildImage`.
 Also, you can deploy this project to Docker Swarm using `./gradlew deploy` command.
 
 ## Reference documentation
@@ -208,5 +212,4 @@ For further reference, please consider the following sections:
 - [Create a RESTful Web Service with Payara Server](https://blog.payara.fish/create-a-restful-web-service-with-payara-server-netbeans)
 - [Using Payara Server with Docker](https://blog.payara.fish/using-payara-server-with-docker)
 - [Mockito Tutorial](https://www.baeldung.com/mockito-series)
-- [Enforcing code coverage rule with JaCoCo](https://medium.com/@AyushVardhan/enforcing-code-coverage-rule-with-jacoco-in-maven-lifecycle-8ebc1fe3b6ce)
 - [Integration Testing with the Payara and Testcontainers](https://blog.payara.fish/jakarta-ee-integration-testing-with-testcontainers)

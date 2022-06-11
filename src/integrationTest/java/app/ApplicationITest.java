@@ -12,7 +12,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @DisplayName("Integration Tests")
-class ApplicationIT {
+class ApplicationITest {
 
     @Container
     static GenericContainer<?> app = new GenericContainer<>("microprofile-api")

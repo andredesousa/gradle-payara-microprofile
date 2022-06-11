@@ -3,6 +3,7 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.42.0'
     id 'com.github.spotbugs' version '5.0.5'
     id 'com.star-zero.gradle.githook' version '1.2.1'
+    id "fish.payara.micro-gradle-plugin" version "1.1.0"
     id 'io.swagger.core.v3.swagger-gradle-plugin' version '2.2.0'
     id 'pl.allegro.tech.build.axion-release' version '1.13.6'
     id 'ru.netris.commitlint' version '1.4.1'
@@ -54,6 +55,11 @@ compileJava {
 
 war {
     archiveFileName = 'microprofile-api.war'
+}
+
+payaraMicro {
+    payaraVersion = '5.2022.2'
+    deployWar = true
 }
 
 githook {
@@ -186,6 +192,12 @@ task formatCheck() {
     group = 'Verification'
 }
 
+task generateOpenApi() {
+    dependsOn 'resolve'
+    description = 'Generates the openapi specification file.'
+    group = 'Release'
+}
+
 task generateChangelog(type: se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask) {
     description = 'Generates a changelog from GIT repository.'
     group = 'Release'
@@ -195,6 +207,7 @@ task generateChangelog(type: se.bjurr.gitchangelog.plugin.gradle.GitChangelogTas
 }
 
 task buildImage(type: Exec) {
+    dependsOn 'war'
     commandLine 'docker', 'build', '-f', 'src/main/docker/Dockerfile', '-t', 'microprofile-api', '.'
     description = 'Builds a Docker image of the application.'
     group = 'Build'

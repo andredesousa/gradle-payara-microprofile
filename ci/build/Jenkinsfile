@@ -15,6 +15,11 @@ pipeline {
         ])
       }
     }
+    stage('Build App') {
+      steps {
+        sh './gradlew war -i'
+      }
+    }
     stage('Code Analysis') {
       steps {
         sh './gradlew lint -i'
@@ -25,14 +30,9 @@ pipeline {
         sh './gradlew test -i'
       }
     }
-    stage('Build Image') {
-      steps {
-        sh './gradlew war buildImage'
-      }
-    }
     stage('Integration Tests') {
       steps {
-        sh './gradlew integrationTest -i'
+        sh './gradlew buildImage integrationTest -i'
       }
     }
   }
