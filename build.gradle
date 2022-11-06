@@ -60,6 +60,7 @@ war {
 payaraMicro {
     payaraVersion = '5.2022.2'
     deployWar = true
+    javaCommandLineOptions = ['agentlib': 'jdwp=transport=dt_socket,server=y,suspend=n,address=5005']
 }
 
 githook {
