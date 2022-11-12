@@ -7,10 +7,10 @@
 			"label": "microStart",
 			"group": "build",
 			"type": "shell",
-			"command": "./gradlew microStart",
+			"command": "./gradlew war microStart",
 			"isBackground": true,
 			"windows": {
-				"command": ".\\gradlew.bat microStart"
+				"command": ".\\gradlew.bat war microStart"
 			}
 		}
 	]
